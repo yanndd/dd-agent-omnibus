@@ -19,30 +19,33 @@ relative_path "dd-agent"
 always_build true
 
 build do
-   license "https://raw.githubusercontent.com/DataDog/dd-agent/master/LICENSE"
-   # Agent code
-   command "mkdir -p #{install_dir}/agent/"
-   command "cp -R checks.d #{install_dir}/agent/"
-   command "cp -R checks #{install_dir}/agent/"
-   command "cp -R dogstream #{install_dir}/agent/"
-   command "cp -R resources #{install_dir}/agent/"
-   command "cp -R utils #{install_dir}/agent/"
-   command "cp *.py #{install_dir}/agent/"
-   command "cp datadog-cert.pem #{install_dir}/agent/"
+  license "https://raw.githubusercontent.com/DataDog/dd-agent/master/LICENSE"
+  # Agent code
+  command "mkdir -p #{install_dir}/agent/"
+  command "cp -R checks.d #{install_dir}/agent/"
+  command "cp -R checks #{install_dir}/agent/"
+  command "cp -R dogstream #{install_dir}/agent/"
+  command "cp -R resources #{install_dir}/agent/"
+  command "cp -R utils #{install_dir}/agent/"
+  command "cp *.py #{install_dir}/agent/"
+  command "cp datadog-cert.pem #{install_dir}/agent/"
 
-   # Configuration files
-   command "sudo mkdir -p /etc/dd-agent"
-   command "sudo cp packaging/#{ENV['DISTRO']}/datadog-agent.init /etc/init.d/datadog-agent"
-   command "sudo cp packaging/supervisor.conf /etc/dd-agent/supervisor.conf"
-   command "sudo cp datadog.conf.example /etc/dd-agent/datadog.conf.example"
-   command "sudo cp -R conf.d /etc/dd-agent/"
-   command "sudo mkdir -p /etc/dd-agent/checks.d/"
-
-   # Create symlinks
-   command "sudo ln -sf /opt/datadog-agent/agent/agent.py /usr/bin/dd-agent"
-   command "sudo ln -sf /opt/datadog-agent/agent/dogstatsd.py /usr/bin/dogstatsd"
-   command "sudo ln -sf /opt/datadog-agent/agent/ddagent.py /usr/bin/dd-forwarder"
-   command "sudo chmod 755 /usr/bin/dd-agent"
-   command "sudo chmod 755 /usr/bin/dogstatsd"
-   command "sudo chmod 755 /usr/bin/dd-forwarder"
+  # Configuration files
+  if ENV['PKG_TYPE'] == "rpm" || ENV['PKG_TYPE'] == "deb"
+    command "sudo cp packaging/#{ENV['DISTRO']}/datadog-agent.init /etc/init.d/datadog-agent"
+    command "sudo mkdir -p /etc/dd-agent"
+    command "sudo cp packaging/supervisor.conf /etc/dd-agent/supervisor.conf"
+    command "sudo cp datadog.conf.example /etc/dd-agent/datadog.conf.example"
+    command "sudo cp -R conf.d /etc/dd-agent/"
+    command "sudo mkdir -p /etc/dd-agent/checks.d/"
+  elsif ENV['PKG_TYPE'] == "dmg"
+    command "sudo mkdir #{install_dir}/conf #{install_dir}/launchd"
+    command "sudo cp packaging/supervisor.conf #{install_dir}/conf/supervisor.conf"
+    command "sudo sed -in '/dd-agent/d' #{install_dir}/conf/supervisor.conf"
+    command "sudo cp datadog.conf.example #{install_dir}/conf/datadog.conf.example"
+    command "sudo cp -R conf.d #{install_dir}/conf/"
+    command "sudo cp packaging/datadog-agent/osx/datadog-agent #{install_dir}/bin"
+    command "sudo cp packaging/datadog-agent/osx/com.datadoghq.Agent.plist.example #{install_dir}/launchd"
+    command "sudo mkdir -p #{install_dir}/conf/checks.d/"
+  end
 end

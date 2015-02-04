@@ -1,6 +1,13 @@
 #!/bin/bash -e
 PROJECT_DIR=~vagrant/dd-agent-omnibus
 PROJECT_NAME=datadog-agent
+if [ -z "$LOG_LEVEL" ]; then
+	LOG_LEVEL=info
+fi
+if [ -z "$PKG_TYPE" ]; then
+	echo "Please set PKG_TYPE"
+	exit 1
+fi
 
 echo "Show exported defaults"
 cat /etc/profile.d/vagrant.sh
@@ -14,11 +21,18 @@ sudo rm -f /etc/init.d/datadog-agent
 sudo rm -rf /etc/dd-agent
 sudo rm -rf /opt/$PROJECT_NAME/*
 
-cd $PROJECT_DIR
 # Install the gems we need, with stubs in bin/
-su vagrant -c "bundle install --binstubs"
-su vagrant -c "bundle update" # Make sure to update to the latest version of omnibus-software
-su vagrant -c "./bin/omnibus build -l=$LOG_LEVEL $PROJECT_NAME"
+
+if [ $PKG_TYPE = "dmg" ]; then
+	bundle install --binstubs
+	bundle update # Make sure to update to the latest version of omnibus-software
+	./bin/omnibus build -l=$LOG_LEVEL $PROJECT_NAME
+else
+	cd $PROJECT_DIR
+	su vagrant -c "bundle install --binstubs"
+	su vagrant -c "bundle update"
+	su vagrant -c "./bin/omnibus build -l=$LOG_LEVEL $PROJECT_NAME"
+fi
 
 # TODO: add rpm signing
 #if [ #{ENV['PKG_TYPE']} == "rpm" ] && [ #{ENV['GPG_PASSPHRASE']} ] && [ #{ENV['GPG_KEY_NAME']} ]; then

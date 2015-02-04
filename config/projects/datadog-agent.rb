@@ -30,11 +30,14 @@ elsif Ohai['platform_family'] == 'debian'
     conflict "datadog-agent-base (<< 5.0.0)"
 end
 
-extra_package_file "/etc/init.d/datadog-agent"
-extra_package_file "/etc/dd-agent"
-extra_package_file "/usr/bin/dd-agent"
-extra_package_file "/usr/bin/dogstatsd"
-extra_package_file "/usr/bin/dd-forwarder"
+
+if ENV['PKG_TYPE'] == "rpm" || ENV['PKG_TYPE'] == "deb"
+	extra_package_file "/etc/init.d/datadog-agent"
+	extra_package_file "/etc/dd-agent"
+	extra_package_file "/usr/bin/dd-agent"
+	extra_package_file "/usr/bin/dogstatsd"
+	extra_package_file "/usr/bin/dd-forwarder"
+end
 
 provides "datadog-agent-base"
 
@@ -46,13 +49,16 @@ dependency "preparation"
 dependency "boto"
 dependency "datadog-gohai"
 dependency "ntplib"
-dependency "procps-ng"
+# Only needed for docker container
+if ENV['PKG_TYPE'] == "deb"
+	dependency "procps-ng"
+	dependency "sysstat"
+end
 dependency "pycrypto"
 dependency "pyopenssl"
 dependency "pyyaml"
 dependency "simplejson"
 dependency "supervisor"
-dependency "sysstat"
 dependency "tornado"
 dependency "uuid"
 dependency "zlib"
@@ -82,6 +88,8 @@ dependency "datadog-agent"
 
 # version manifest file
 dependency "version-manifest"
+
+mac_pkg_identifier "com.datadoghq.agent"
 
 exclude "\.git*"
 exclude "bundler\/git"
