@@ -31,3 +31,16 @@ Supported options:
 
 * `LOCAL_AGENT_REPO` can be used if you want it to build a local version of the agent code. It should be an absolute path to your local copy of dd-agent.
 * `FORCE_RELOAD` if set will force a reload of your VM, can be useful if you're having with filesystem sync for instance.
+
+## Build on Mac OS X
+
+The Mac build platform should have:
+
+* Xcode installed (type `git` in a terminal),
+* [Go](http://golang.org/dl/) installed,
+* sudoer rights for the build user,
+* Bundler installed: `sudo gem install bundler`,
+* Important directories created: `sudo mkdir -p /var/cache/omnibus /opt/datadog-agent`,
+* Owned by the right user: `sudo chown user:nogroup /var/cache/omnibus /opt/datadog-agent`.
+
+Then run: `PKG_TYPE=dmg sh omnibus_build.sh`.
