@@ -44,8 +44,8 @@ build do
     command "sed -in '/dd-agent/d' #{install_dir}/conf/supervisor.conf"
     command "cp datadog.conf.example #{install_dir}/conf/datadog.conf.example"
     command "cp -R conf.d #{install_dir}/conf/"
-    command "cp packaging/datadog-agent/osx/datadog-agent #{install_dir}/bin"
-    command "cp packaging/datadog-agent/osx/com.datadoghq.Agent.plist.example #{install_dir}/launchd"
+    command "cp packaging/osx/datadog-agent #{install_dir}/bin"
+    command "cp packaging/osx/com.datadoghq.Agent.plist.example #{install_dir}/launchd"
     command "mkdir -p #{install_dir}/conf/checks.d/"
   end
 end
