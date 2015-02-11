@@ -42,6 +42,8 @@ if [ ! -z "$FORCE_DESTROY" ]; then
     destroy
 fi
 
+exit 0
+
 if [ -z "$FORCE_RELOAD" ]; then
     up_and_provision
 else
