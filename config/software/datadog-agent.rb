@@ -39,13 +39,12 @@ build do
     command "sudo cp -R conf.d /etc/dd-agent/"
     command "sudo mkdir -p /etc/dd-agent/checks.d/"
   elsif ENV['PKG_TYPE'] == "dmg"
-    command "mkdir #{install_dir}/conf #{install_dir}/launchd"
-    command "cp packaging/supervisor.conf #{install_dir}/conf/supervisor.conf"
-    command "sed -in '/dd-agent/d' #{install_dir}/conf/supervisor.conf"
-    command "cp datadog.conf.example #{install_dir}/conf/datadog.conf.example"
-    command "cp -R conf.d #{install_dir}/conf/"
+    command "mkdir #{install_dir}/etc #{install_dir}/launchd"
+    command "cp packaging/osx/supervisor.conf #{install_dir}/etc/supervisor.conf"
+    command "cp datadog.conf.example #{install_dir}/etc/datadog.conf.example"
+    command "cp -R conf.d #{install_dir}/etc/"
     command "cp packaging/osx/datadog-agent #{install_dir}/bin"
     command "cp packaging/osx/com.datadoghq.Agent.plist.example #{install_dir}/launchd"
-    command "mkdir -p #{install_dir}/conf/checks.d/"
+    command "mkdir -p #{install_dir}/etc/checks.d/"
   end
 end

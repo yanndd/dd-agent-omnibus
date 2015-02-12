@@ -1,8 +1,9 @@
 #!/bin/sh
 
-CONFIG_DIR=/etc/dd-agent
 LOG_DIR=/var/log/datadog
 INSTALL_DIR=/opt/datadog-agent
+TEMP_DIR=/opt/datadog-agent/tmp
+CONFIG_DIR=/opt/datadog-agent/etc
 
 # OS/Distro Detection
 DISTRIBUTION=$(grep -Eo "(Debian|Ubuntu|RedHat|CentOS|openSUSE|Amazon)" /etc/issue 2>/dev/null || uname -s)
@@ -13,20 +14,24 @@ error_exit()
   exit 1
 }
 
-mkdir -p ${LOG_DIR} || error_exit "Cannot create ${LOG_DIR}!"
 
 if [ $DISTRIBUTION = "Darwin" ]; then
-  # Copy conf
-  mkdir -p /etc/dd-agent
-  cp -R $INSTALL_DIR/conf/* /etc/dd-agent
+  # Prepare log dir
+  mkdir -p ${LOG_DIR} || error_exit "Cannot create ${LOG_DIR}!"
+  chown -R root:admin $LOG_DIR
+  chmod 775 $LOG_DIR
+
+  # Install executable in PATH
   ln -sf $INSTALL_DIR/bin/datadog-agent /usr/bin/datadog-agent
+  chmod 755 /usr/bin/datadog-agent
   sed "s|AGENT_BASE|$INSTALL_DIR|; s|USER_NAME|$(whoami)|" $INSTALL_DIR/launchd/com.datadoghq.Agent.plist.example > $INSTALL_DIR/launchd/com.datadoghq.Agent.plist
 
-  chmod 755 /usr/bin/datadog-agent
 
-  # Set proper rights to the current user
-  chown -R $(whoami):nogroup ${CONFIG_DIR}
-  chown -R $(whoami):nogroup ${LOG_DIR}
-  chown -R root:nogroup /opt/datadog-agent
+  # Set proper rights to the admin group
+  chown -R root:admin /opt/datadog-agent
+  mkdir -p $TEMP_DIR
+  chmod 775 $TEMP_DIR
+  chmod 775 $CONFIG_DIR $CONFIG_DIR/conf.d $CONFIG_DIR/checks.d
+  chmod 664 $CONFIG_DIR/datadog.conf.example $CONFIG_DIR/supervisor.conf $CONFIG_DIR/conf.d/*
 fi
 exit 0
