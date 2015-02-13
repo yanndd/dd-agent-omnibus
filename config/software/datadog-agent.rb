@@ -30,6 +30,16 @@ build do
   command "cp *.py #{install_dir}/agent/"
   command "cp datadog-cert.pem #{install_dir}/agent/"
 
+  # Ship the GUI (or not)
+  if ENV['PKG_TYPE'] == "dmg"
+    command "cp -R packaging/datadog-agent/win32/install_files/guidata/images #{install_dir}/agent"
+    command "cp win32/gui.py #{install_dir}/agent"
+    command "cp win32/status.html #{install_dir}/agent"
+    command "mkdir -p #{install_dir}/agent/packaging"
+    command "cp packaging/osx/app/* #{install_dir}/agent/packaging"
+    command "#{install_dir}/embedded/bin/python #{install_dir}/agent/setup.py py2app"
+  end
+
   # Configuration files
   if ENV['PKG_TYPE'] == "rpm" || ENV['PKG_TYPE'] == "deb"
     command "sudo cp packaging/#{ENV['DISTRO']}/datadog-agent.init /etc/init.d/datadog-agent"

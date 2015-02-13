@@ -49,11 +49,6 @@ dependency "preparation"
 dependency "boto"
 dependency "datadog-gohai"
 dependency "ntplib"
-# Only needed for docker container
-if ENV['PKG_TYPE'] == "deb"
-	dependency "procps-ng"
-	dependency "sysstat"
-end
 dependency "pycrypto"
 dependency "pyopenssl"
 dependency "pyyaml"
@@ -62,6 +57,11 @@ dependency "supervisor"
 dependency "tornado"
 dependency "uuid"
 dependency "zlib"
+# Only needed for docker container
+if ENV['PKG_TYPE'] == "deb" || ENV['PKG_TYPE'] == "rpm"
+	dependency "procps-ng"
+	dependency "sysstat"
+end
 
 # Check dependencies
 dependency "adodbapi"
@@ -82,6 +82,11 @@ dependency "python-rrdtool"
 dependency "pyvmomi"
 dependency "requests"
 dependency "snakebite"
+
+# Gui
+if ENV['PKG_TYPE'] == "dmg"
+	dependency 'gui'
+end
 
 # Datadog agent
 dependency "datadog-agent"
