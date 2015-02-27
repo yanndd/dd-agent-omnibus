@@ -1,0 +1,12 @@
+#!/bin/sh
+
+INSTALL_DIR=/opt/datadog-agent
+
+# OS/Distro Detection
+DISTRIBUTION=$(grep -Eo "(Debian|Ubuntu|RedHat|CentOS|openSUSE|Amazon)" /etc/issue 2>/dev/null || uname -s)
+
+
+if [ $DISTRIBUTION = "Darwin" ]; then
+    rm -rf $INSTALL_DIR
+fi
+exit 0
