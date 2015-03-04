@@ -1,12 +1,29 @@
 #!/bin/sh
 
 INSTALL_DIR=/opt/datadog-agent
+LOG_DIR=/var/log/datadog
+APP_CONF_DIR="/Applications/Datadog Agent.app/Contents/Resources"
+
+# We log stdout & stderr of this script
+LOG_FILE=$LOG_DIR/preinstall.log
+mkdir -p $LOG_DIR
+exec > $LOG_FILE 2>&1
 
 # OS/Distro Detection
 DISTRIBUTION=$(grep -Eo "(Debian|Ubuntu|RedHat|CentOS|openSUSE|Amazon)" /etc/issue 2>/dev/null || uname -s)
 
-
 if [ $DISTRIBUTION = "Darwin" ]; then
+	if [ -e "$APP_CONF_DIR/datadog.conf" ]; then
+	  # Stop old version
+      "$APP_CONF_DIR/../MacOS/datadog-agent" stop || true
+      osascript -e 'quit app "Datadog Agent"' || true
+
+      # Save old conf
+	  cp -f "$APP_CONF_DIR/datadog.conf" /tmp
+	  cp -fR "$APP_CONF_DIR/checks.d" /tmp
+	  cp -fR "$APP_CONF_DIR/conf.d" /tmp
+ 	fi
+
+ 	# Clean before install
     rm -rf $INSTALL_DIR
 fi
-exit 0

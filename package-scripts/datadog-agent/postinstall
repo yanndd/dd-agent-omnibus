@@ -2,49 +2,57 @@
 
 LOG_DIR=/var/log/datadog
 INSTALL_DIR=/opt/datadog-agent
-CONFIG_DIR=$INSTALL_DIR/Datadog\ Agent.app/Contents/Resources
+OPT_APP_DIR="$INSTALL_DIR/Datadog Agent.app"
 APP_CONF_DIR="/Applications/Datadog Agent.app/Contents/Resources"
+
+# We log stdout & stderr of this script
+LOG_FILE=$LOG_DIR/postinstall.log
+mkdir -p $LOG_DIR
+exec > $LOG_FILE 2>&1
+
+# Determine current user
+CURRENT_USER=$(ps aux | grep "CoreServices/Installer" | grep -v grep | awk '{print $1;}')
 
 # OS/Distro Detection
 DISTRIBUTION=$(grep -Eo "(Debian|Ubuntu|RedHat|CentOS|openSUSE|Amazon)" /etc/issue 2>/dev/null || uname -s)
 
-error_exit()
-{
-  echo "${PROGNAME}: ${1:-"Unknown Error"}" 1>&2
-  exit 1
-}
-
-
 if [ $DISTRIBUTION = "Darwin" ]; then
-  # Prepare log dir
-  mkdir -p ${LOG_DIR} || error_exit "Cannot create ${LOG_DIR}!"
-  chown -R root:admin $LOG_DIR
-  chmod 775 $LOG_DIR
-  touch $LOG_DIR/collector.log $LOG_DIR/forwarder.log $LOG_DIR/dogstatsd.log $LOG_DIR/supervisord.log
-  chown root:admin $LOG_DIR/collector.log $LOG_DIR/forwarder.log $LOG_DIR/dogstatsd.log $LOG_DIR/supervisord.log
-  chmod 664 $LOG_DIR/collector.log $LOG_DIR/forwarder.log $LOG_DIR/dogstatsd.log $LOG_DIR/supervisord.log
+  # Reinstall is really different: 
+  # the app is extracted directly where the old version is
+  if [ -e "$OPT_APP_DIR" ]; then
+    # Prepare log dir
+    chown -R $CURRENT_USER:admin $LOG_DIR
+    chmod 755 $LOG_DIR
 
-  sed "s|AGENT_BASE|$INSTALL_DIR|; s|USER_NAME|$(whoami)|" $INSTALL_DIR/Datadog\ Agent.app/Contents/Resources/com.datadoghq.Agent.plist.example > $INSTALL_DIR/Datadog\ Agent.app/Contents/Resources/com.datadoghq.Agent.plist
+    # Installing the app
+    rm -rf /Applications/Datadog\ Agent.app
+    mv $INSTALL_DIR/Datadog\ Agent.app /Applications
+  fi
 
-
+  sed "s|AGENT_BASE|$APP_CONF_DIR|; s|USER_NAME|$CURRENT_USER|" $INSTALL_DIR/Datadog\ Agent.app/Contents/Resources/com.datadoghq.Agent.plist.example > $INSTALL_DIR/Datadog\ Agent.app/Contents/Resources/com.datadoghq.Agent.plist
+  
   # Copying existing conf is one exists
-  if [ -e "$APP_CONF_DIR/datadog.conf" ]; then
-    cp "$APP_CONF_DIR/datadog.conf" "$CONFIG_DIR/"
+  if [ -e "/tmp/datadog.conf" ]; then
+    mv -f "/tmp/datadog.conf" "$APP_CONF_DIR/"
+    mv -f "/tmp/conf.d/*" "$APP_CONF_DIR/conf.d"
+    cp -n "/tmp/checks.d/*" "$APP_CONF_DIR/checks.d"
+    rm -rf /tmp/datadog.conf /tmp/conf.d /tmp/checks.d
   # Or copying default
   else
-    cp "$CONFIG_DIR/datadog.conf.example" "$CONFIG_DIR/datadog.conf"
+    cp "$APP_CONF_DIR/datadog.conf.example" "$APP_CONF_DIR/datadog.conf"
   fi
 
   # Correct rights
-  chown root:admin "$CONFIG_DIR/datadog.conf"
-  chown -R root:admin "$CONFIG_DIR/datadog.conf" "$CONFIG_DIR/conf.d" "$CONFIG_DIR/checks.d"
-  chmod 775 "$CONFIG_DIR/conf.d" "$CONFIG_DIR/checks.d"
-  chmod 664 "$CONFIG_DIR/datadog.conf"
-  chmod 664 "$CONFIG_DIR/datadog.conf.example" "$CONFIG_DIR/supervisor.conf" "$CONFIG_DIR/conf.d/"*
+  chown $CURRENT_USER:admin "$APP_CONF_DIR/datadog.conf"
+  chown -R $CURRENT_USER:admin "$APP_CONF_DIR/conf.d" "$APP_CONF_DIR/checks.d"
 
+  # Error if app not properly installed
+  if [ ! -e "$APP_CONF_DIR/datadog.conf" ]; then
+    exit 1
+  fi
 
-  # Installing the app
-  rm -rf /Applications/Datadog\ Agent.app
-  mv $INSTALL_DIR/Datadog\ Agent.app /Applications
+  # Launch the app
+  sudo -u $CURRENT_USER "$APP_CONF_DIR/../MacOS/datadog-agent" start || true
+  sudo -u $CURRENT_USER open -a 'Datadog Agent.app'
 fi
 exit 0
