@@ -15,13 +15,16 @@ DISTRIBUTION=$(grep -Eo "(Debian|Ubuntu|RedHat|CentOS|openSUSE|Amazon)" /etc/iss
 if [ $DISTRIBUTION = "Darwin" ]; then
 	if [ -e "$APP_CONF_DIR/datadog.conf" ]; then
 	  # Stop old version
-      "$APP_CONF_DIR/../MacOS/datadog-agent" stop || true
-      osascript -e 'quit app "Datadog Agent"' || true
+          "$APP_CONF_DIR/../MacOS/datadog-agent" stop || true
+          kill `ps aux | grep 'Datadog Agent.app' | grep -v grep  | cut -d ' ' -f 4` || true
 
-      # Save old conf
+          # Save old conf
+          mkdir -p /tmp/conf.d
+          rm -rf /tmp/checks.d
+          rm -f /tmp/datadog.conf /tmp/conf.d/*
 	  cp -f "$APP_CONF_DIR/datadog.conf" /tmp
-	  cp -fR "$APP_CONF_DIR/checks.d" /tmp
-	  cp -fR "$APP_CONF_DIR/conf.d" /tmp
+	  cp -f "$APP_CONF_DIR/conf.d/"*.yaml /tmp/conf.d
+	  cp -fR "$APP_CONF_DIR/checks.d" /tmp/
  	fi
 
  	# Clean before install
