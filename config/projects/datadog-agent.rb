@@ -94,7 +94,7 @@ dependency "datadog-agent"
 # version manifest file
 dependency "version-manifest"
 
-mac_pkg_identifier "com.datadoghq.agent"
+mac_pkg_identifier 'com.datadoghq.agent'
 
 exclude "\.git*"
 exclude "bundler\/git"
