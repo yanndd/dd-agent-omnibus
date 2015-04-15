@@ -34,6 +34,7 @@ elsif Ohai['platform_family'] == 'debian'
 end
 
 extra_package_file "/etc/init.d/datadog-agent"
+extra_package_file "/lib/systemd/system/datadog-agent.service"
 extra_package_file "/etc/dd-agent"
 extra_package_file "/usr/bin/dd-agent"
 extra_package_file "/usr/bin/dogstatsd"

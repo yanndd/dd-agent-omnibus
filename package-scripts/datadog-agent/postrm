@@ -3,8 +3,15 @@ LINUX_DISTRIBUTION=$(grep -Eo "(Debian|Ubuntu|RedHat|CentOS|openSUSE|Amazon)" /e
 
 if [ -f /etc/debian_version ] || [ "$LINUX_DISTRIBUTION" == "Debian" ] || [ "$LINUX_DISTRIBUTION" == "Ubuntu" ]; then
     set -e
+    
+    # Removing the service form startup (since it's not there anymore)
+    if command -v systemd >/dev/null 2>&1; then
+        systemctl disable datadog-agent
+    else
+        update-rc.d -f datadog-agent remove
+    fi
+
     if [ "$1" = purge ]; then
-        update-rc.d datadog-agent remove
         deluser dd-agent
         rm -rf /opt/datadog-agent
         rm -rf /var/log/datadog

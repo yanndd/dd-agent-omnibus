@@ -33,6 +33,9 @@ build do
    # Configuration files
    command "sudo mkdir -p /etc/dd-agent"
    command "sudo cp packaging/#{ENV['DISTRO']}/datadog-agent.init /etc/init.d/datadog-agent"
+   command "sudo chmod 755 /etc/init.d/datadog-agent"
+   command "sudo mkdir -p /lib/systemd/system"
+   command "sudo cp packaging/#{ENV['DISTRO']}/datadog-agent.service /lib/systemd/system/datadog-agent.service"
    command "sudo cp packaging/supervisor.conf /etc/dd-agent/supervisor.conf"
    command "sudo cp datadog.conf.example /etc/dd-agent/datadog.conf.example"
    command "sudo cp -R conf.d /etc/dd-agent/"
